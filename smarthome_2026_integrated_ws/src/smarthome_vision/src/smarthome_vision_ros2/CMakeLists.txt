@@ -12,10 +12,12 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(camera_info_manager REQUIRED)
+find_package(smarthome_common_interfaces REQUIRED)
 find_package(OpenCV REQUIRED COMPONENTS
   core
   imgproc
@@ -64,7 +66,6 @@ include_directories(
 
 add_library(${PROJECT_NAME}_core SHARED
   src/crc16.cpp
-  src/gimbal_bridge.cpp
   src/pose_solver.cpp
   src/trt_detector.cpp
   src/detector.cpp
@@ -74,9 +75,11 @@ ament_target_dependencies(${PROJECT_NAME}_core
   rclcpp
   sensor_msgs
   std_msgs
+  geometry_msgs
   cv_bridge
   image_transport
   camera_info_manager
+  smarthome_common_interfaces
 )
 
 target_link_libraries(${PROJECT_NAME}_core
@@ -93,9 +96,11 @@ ament_target_dependencies(vision_node
   rclcpp
   sensor_msgs
   std_msgs
+  geometry_msgs
   cv_bridge
   image_transport
   camera_info_manager
+  smarthome_common_interfaces
 )
 
 target_link_libraries(vision_node

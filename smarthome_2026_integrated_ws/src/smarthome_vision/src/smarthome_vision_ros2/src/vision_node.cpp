@@ -3,21 +3,19 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <sstream>
-#include <iomanip>
 #include <algorithm>
 #include <chrono>
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <builtin_interfaces/msg/time.hpp>
-#include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/u_int8.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
 
+#include "smarthome_common_interfaces/msg/object_target.hpp"
 #include "smarthome_vision/msg/detected_target.hpp"
 #include "smarthome_vision/detector.hpp"
-#include "smarthome_vision/gimbal_bridge.hpp"
 #include "smarthome_vision/pose_solver.hpp"
 #include "smarthome_vision/types.hpp"
 #include "smarthome_vision/protocol.hpp"
@@ -317,8 +315,10 @@ public:
   VisionNode() : Node("smarthome_vision_node")
   {
     declare_parameter<std::string>("image_topic", "/image_raw");
-    declare_parameter<std::string>("serial_device", "/dev/gimbal");
-    declare_parameter<int>("baudrate", 115200);
+    declare_parameter<std::string>("vision_mode_topic", "/vision_mode");
+    declare_parameter<std::string>("object_target_topic", "/smarthome/object_target");
+    declare_parameter<std::string>("target_frame_id", "camera_link");
+    declare_parameter<int>("initial_mode", static_cast<int>(VisionMode::IDLE));
 
     declare_parameter<bool>("show_debug", true);
     declare_parameter<bool>("use_cuda_preprocess", true);
@@ -365,6 +365,8 @@ public:
     camera_width_ = get_parameter("camera_width").as_int();
     camera_height_ = get_parameter("camera_height").as_int();
     camera_fps_ = get_parameter("camera_fps").as_int();
+    current_mode_ = static_cast<uint8_t>(get_parameter("initial_mode").as_int());
+    target_frame_id_ = get_parameter("target_frame_id").as_string();
 
     auto k = get_parameter("camera_matrix").as_double_array();
     auto d = get_parameter("dist_coeffs").as_double_array();
@@ -413,12 +415,12 @@ public:
       static_cast<float>(get_parameter("qr_score_threshold").as_double()),
       get_parameter("use_cuda_preprocess").as_bool());
 
-    gimbal_ = std::make_unique<GimbalBridge>(
-      get_parameter("serial_device").as_string(),
-      get_parameter("baudrate").as_int());
-
     pub_ = create_publisher<smarthome_vision::msg::DetectedTarget>("detected_target", 10);
-    serial_tx_hex_pub_ = create_publisher<std_msgs::msg::String>("serial_tx_hex", 10);
+    object_target_pub_ = create_publisher<smarthome_common_interfaces::msg::ObjectTarget>(
+      get_parameter("object_target_topic").as_string(), 10);
+    mode_sub_ = create_subscription<std_msgs::msg::UInt8>(
+      get_parameter("vision_mode_topic").as_string(), 10,
+      std::bind(&VisionNode::modeCallback, this, _1));
 
     if (!use_local_camera_) {
       sub_ = create_subscription<sensor_msgs::msg::Image>(
@@ -475,9 +477,7 @@ private:
     if (use_test_mode) {
       return static_cast<uint8_t>(get_parameter("test_mode").as_int());
     }
-
-    gimbal_->updateReceive();
-    return gimbal_->getMode();
+    return current_mode_;
   }
 
   builtin_interfaces::msg::Time nowAsBuiltinTime() const
@@ -497,12 +497,7 @@ private:
     out.y = 0.0f;
     out.z = 0.0f;
     pub_->publish(out);
-
-    std_msgs::msg::String hex_msg;
-    hex_msg.data = gimbal_->buildTargetPacketHex(mode, false, 0, 0.0f, 0.0f, 0.0f);
-    serial_tx_hex_pub_->publish(hex_msg);
-
-    gimbal_->sendTarget(mode, false, 0, 0.0f, 0.0f, 0.0f);
+    publishObjectTarget(out);
   }
 
   void publishFoundResult(
@@ -526,19 +521,33 @@ private:
       out.corners_uv[2 * i + 1] = det.corners[i].y;
     }
     pub_->publish(out);
+    publishObjectTarget(out);
+  }
 
-    const uint8_t tx_class_id = static_cast<uint8_t>(std::max(0, det.class_id));
+  void modeCallback(const std_msgs::msg::UInt8::SharedPtr msg)
+  {
+    if (msg->data <= static_cast<uint8_t>(VisionMode::DETECT_QR)) {
+      current_mode_ = msg->data;
+    }
+  }
 
-    std_msgs::msg::String hex_msg;
-    hex_msg.data = gimbal_->buildTargetPacketHex(
-      mode, true, tx_class_id, out.x, out.y, out.z);
-    serial_tx_hex_pub_->publish(hex_msg);
-
-    gimbal_->sendTarget(
-      mode,
-      true,
-      tx_class_id,
-      out.x, out.y, out.z);
+  void publishObjectTarget(const smarthome_vision::msg::DetectedTarget & detected)
+  {
+    smarthome_common_interfaces::msg::ObjectTarget target;
+    target.stamp = detected.stamp;
+    target.class_id = detected.tracking ? detected.class_id : -1;
+    target.score = detected.tracking ? detected.score : 0.0f;
+    target.source = detected.mode == static_cast<uint8_t>(VisionMode::DETECT_QR)
+      ? smarthome_common_interfaces::msg::ObjectTarget::SOURCE_QR
+      : smarthome_common_interfaces::msg::ObjectTarget::SOURCE_OBJECT;
+    target.label = detected.tracking ? std::to_string(detected.class_id) : "";
+    target.pose.header.stamp = detected.stamp;
+    target.pose.header.frame_id = target_frame_id_;
+    target.pose.pose.position.x = detected.tracking ? detected.x : 0.0f;
+    target.pose.pose.position.y = detected.tracking ? detected.y : 0.0f;
+    target.pose.pose.position.z = detected.tracking ? detected.z : 0.0f;
+    target.pose.pose.orientation.w = 1.0;
+    object_target_pub_->publish(target);
   }
 
   void processFrame(const cv::Mat & image, const builtin_interfaces::msg::Time & stamp)
@@ -647,18 +656,20 @@ private:
 
 private:
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_;
+  rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr mode_sub_;
   rclcpp::Publisher<smarthome_vision::msg::DetectedTarget>::SharedPtr pub_;
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr serial_tx_hex_pub_;
+  rclcpp::Publisher<smarthome_common_interfaces::msg::ObjectTarget>::SharedPtr object_target_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   std::unique_ptr<Detector> object_detector_;
   std::unique_ptr<Detector> qr_detector_;
   std::unique_ptr<PoseSolver> object_pose_solver_;
   std::unique_ptr<PoseSolver> qr_pose_solver_;
-  std::unique_ptr<GimbalBridge> gimbal_;
 
   cv::VideoCapture cap_;
 
+  uint8_t current_mode_ = static_cast<uint8_t>(VisionMode::IDLE);
+  std::string target_frame_id_ = "camera_link";
   bool show_debug_ = true;
   bool use_local_camera_ = true;
   int camera_device_id_ = 0;

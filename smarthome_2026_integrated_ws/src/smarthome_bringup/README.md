@@ -1,46 +1,34 @@
 # smarthome_bringup
 
-总启动包。它负责把导航、视觉、通信和任务状态机放在同一个 launch 中。
+总启动包会按当前工程约定启动三条链路：
 
-## 启动完整比赛流程
+- 导航：`pb2025_nav_bringup`
+- 视觉和通信：`smarthome_vision`，其 launch 内部包含 `robot_serial_comm`
+- 决策：`pb2025_sentry_behavior`，默认 `smart_picking_manager`
+
+## 完整启动
 
 ```bash
 ros2 launch smarthome_bringup online_competition.launch.py \
-  namespace:=smarthome \
-  world:=smarthome_2026 \
-  slam:=False \
   use_robot_state_pub:=True \
   use_rviz:=True \
-  fake_comm:=False \
   serial_device:=/dev/ttyACM0 \
-  auto_start:=False
+  fake_comm:=false
 ```
 
-## 只启动单雷达导航
+## 常用参数
 
-```bash
-ros2 launch smarthome_bringup navigation_only.launch.py \
-  namespace:=smarthome \
-  world:=smarthome_2026 \
-  slam:=False
-```
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `launch_navigation` | `true` | 是否启动导航 |
+| `launch_vision` | `true` | 是否启动视觉和通信 |
+| `launch_decision` | `true` | 是否启动 smart picking 决策 |
+| `serial_device` | `/dev/ttyACM0` | 下位机串口 |
+| `baudrate` | `115200` | 串口波特率 |
+| `fake_comm` | `false` | 通信节点 fake 模式 |
+| `cmd_vel_topic` | `/cmd_vel` | 底盘速度 |
+| `target_topic` | `/smarthome/object_target` | 视觉目标 |
+| `zone_id_topic` | `/smarthome/zone_id` | 当前点位 |
+| `mode_topic` | `/vision_mode` | 下位机视觉模式 |
 
-## 参数含义
-
-| 参数 | 含义 |
-|---|---|
-| `namespace` | ROS 命名空间，单机器人推荐 `smarthome` 或空字符串 |
-| `world` | 地图文件名，不带 `.yaml` 后缀 |
-| `slam` | `True` 建图，`False` 定位导航 |
-| `use_robot_state_pub` | 是否由导航包发布机器人 TF |
-| `use_rviz` | 是否启动 RViz |
-| `launch_navigation` | 是否启动导航链路 |
-| `launch_vision` | 是否启动视觉节点 |
-| `launch_comm` | 是否启动统一通信包 |
-| `launch_mission` | 是否启动任务状态机 |
-| `fake_comm` | 是否使用模拟通信 |
-| `serial_device` | 下位机串口 |
-| `baudrate` | 下位机串口波特率 |
-| `cmd_vel_topic` | Nav2 输出速度话题 |
-| `waypoint_file` | B/C/D/E/F 点位配置 |
-| `auto_start` | 是否 launch 后自动开始任务 |
+更推荐按根目录 README 的三终端顺序分别启动，排查问题时更清楚。

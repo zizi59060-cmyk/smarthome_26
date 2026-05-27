@@ -1,13 +1,15 @@
 smarthome_vision_node:
   ros__parameters:
     image_topic: "/image_raw"
-    serial_device: "/dev/gimbal"
-    baudrate: 115200
+    vision_mode_topic: "/vision_mode"
+    object_target_topic: "/smarthome/object_target"
+    target_frame_id: "camera_link"
+    initial_mode: 0
 
     show_debug: true
     use_cuda_preprocess: true
 
-    use_test_mode: true
+    use_test_mode: false
     test_mode: 1
 
     use_local_camera: true

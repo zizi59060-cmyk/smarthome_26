@@ -1,8 +1,10 @@
-# 覆盖 smarthome_vision 参数。
-# 注意：若原视觉代码仍直接打开 gimbal 串口，需要先按 docs/vision_migration.md 禁用 GimbalBridge。
 smarthome_vision_node:
   ros__parameters:
     image_topic: "/image_raw"
+    vision_mode_topic: "/vision_mode"
+    object_target_topic: "/smarthome/object_target"
+    target_frame_id: "camera_link"
+    initial_mode: 0
     show_debug: true
     use_cuda_preprocess: true
     use_test_mode: false
@@ -11,9 +13,3 @@ smarthome_vision_node:
     camera_width: 640
     camera_height: 480
     camera_fps: 30
-    object_engine_path: "/home/nvidia4/smarthome_2026/ws/src/smarthome_vision/src/smarthome_vision_ros2/assets/object.engine"
-    qr_engine_path: "/home/nvidia4/smarthome_2026/ws/src/smarthome_vision/src/smarthome_vision_ros2/assets/qrcode.engine"
-    object_conf_threshold: 0.25
-    qr_conf_threshold: 0.25
-    # 集成原则：视觉只发布结果，串口由 smarthome_comm 负责。
-    serial_device: ""

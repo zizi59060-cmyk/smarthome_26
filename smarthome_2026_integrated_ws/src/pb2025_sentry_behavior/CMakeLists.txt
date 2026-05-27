@@ -147,6 +147,11 @@ install(
   RUNTIME DESTINATION share/${PROJECT_NAME}/bt_plugins
 )
 
+install(
+  PROGRAMS scripts/smart_picking_manager.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_auto_package(
   INSTALL_TO_SHARE
   behavior_trees

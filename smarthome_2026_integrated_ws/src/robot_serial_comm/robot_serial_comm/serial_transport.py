@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import os
-from typing import Optional
-
 
 class SerialTransport:
     def __init__(self, device: str, baudrate: int, timeout: float = 0.0, fake: bool = False) -> None:
@@ -17,7 +14,8 @@ class SerialTransport:
             return
         if not self.device:
             raise RuntimeError("serial_device is empty while fake_mode is false")
-        import serial  # lazy import, so fake mode does not require pyserial at runtime
+        import serial
+
         self._serial = serial.Serial(self.device, self.baudrate, timeout=self.timeout)
 
     def close(self) -> None:
@@ -28,10 +26,10 @@ class SerialTransport:
     def read_available(self) -> bytes:
         if self.fake or self._serial is None:
             return b""
-        n = getattr(self._serial, "in_waiting", 0)
-        if n <= 0:
+        waiting = int(getattr(self._serial, "in_waiting", 0))
+        if waiting <= 0:
             return b""
-        return self._serial.read(n)
+        return bytes(self._serial.read(waiting))
 
     def write(self, data: bytes) -> int:
         if self.fake:
