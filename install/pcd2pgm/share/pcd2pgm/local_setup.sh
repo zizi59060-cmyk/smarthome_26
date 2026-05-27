@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/pcd2pgm/ament_cmake_environment_hooks/local_setup.sh

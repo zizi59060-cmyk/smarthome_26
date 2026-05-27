@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/auto_aim_interfaces/ament_cmake_core/auto_aim_interfacesConfig-version.cmake

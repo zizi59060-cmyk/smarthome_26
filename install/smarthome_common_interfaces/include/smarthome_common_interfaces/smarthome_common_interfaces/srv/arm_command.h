@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/smarthome_common_interfaces/rosidl_generator_c/smarthome_common_interfaces/srv/arm_command.h

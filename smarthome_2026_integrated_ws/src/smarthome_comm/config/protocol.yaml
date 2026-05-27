@@ -1,0 +1,29 @@
+# smarthome_comm protocol definition.
+# 这是文档化配置；当前 Python 节点的默认值定义在 smarthome_comm/protocol.py。
+# 如果下位机已有既定协议，优先改 protocol.py 的 pack/unpack，并同步维护本表。
+
+frame:
+  magic: [0xA5, 0x5A]
+  endian: little
+  version: 1
+  header: [magic:uint16, version:uint8, seq:uint8, cmd_id:uint16, payload_len:uint16]
+  crc: crc16_modbus_over_header_and_payload
+
+cmd_id:
+  heartbeat_tx: 0x0001
+  chassis_vel: 0x0101
+  vision_target: 0x0201
+  gripper: 0x0301
+  arm_command: 0x0302
+  estop: 0x0401
+  nav_event: 0x0501
+  heartbeat_rx: 0x8001
+  lower_state: 0x8002
+  arm_status: 0x8003
+  ack: 0x80FF
+
+class_id:
+  0: meat
+  1: vegetable
+  2: fruit
+  3: reserved_or_other

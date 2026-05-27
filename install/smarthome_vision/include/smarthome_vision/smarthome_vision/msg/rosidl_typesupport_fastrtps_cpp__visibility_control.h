@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/smarthome_vision/rosidl_typesupport_fastrtps_cpp/smarthome_vision/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h

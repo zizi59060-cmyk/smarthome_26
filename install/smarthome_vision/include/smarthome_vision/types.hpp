@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws/src/smarthome_vision/src/smarthome_vision_ros2/include/smarthome_vision/types.hpp

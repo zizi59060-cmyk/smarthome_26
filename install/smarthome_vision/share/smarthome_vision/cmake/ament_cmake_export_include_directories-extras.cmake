@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/smarthome_vision/ament_cmake_export_include_directories/ament_cmake_export_include_directories-extras.cmake

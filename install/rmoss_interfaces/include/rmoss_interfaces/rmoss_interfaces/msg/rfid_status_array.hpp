@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/rmoss_interfaces/rosidl_generator_cpp/rmoss_interfaces/msg/rfid_status_array.hpp

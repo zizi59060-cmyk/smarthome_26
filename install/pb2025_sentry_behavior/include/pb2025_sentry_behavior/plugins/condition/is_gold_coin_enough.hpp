@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws/src/pb2025_sentry_behavior/include/pb2025_sentry_behavior/plugins/condition/is_gold_coin_enough.hpp

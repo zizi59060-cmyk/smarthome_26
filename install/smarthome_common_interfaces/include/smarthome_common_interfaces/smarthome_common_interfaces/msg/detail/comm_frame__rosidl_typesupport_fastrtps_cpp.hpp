@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/smarthome_common_interfaces/rosidl_typesupport_fastrtps_cpp/smarthome_common_interfaces/msg/detail/comm_frame__rosidl_typesupport_fastrtps_cpp.hpp

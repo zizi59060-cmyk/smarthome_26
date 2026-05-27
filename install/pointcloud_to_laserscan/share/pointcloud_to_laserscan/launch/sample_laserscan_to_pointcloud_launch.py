@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws/src/pb2025_sentry_nav/pointcloud_to_laserscan/launch/sample_laserscan_to_pointcloud_launch.py

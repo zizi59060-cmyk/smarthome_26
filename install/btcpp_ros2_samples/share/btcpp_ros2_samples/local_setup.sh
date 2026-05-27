@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/btcpp_ros2_samples/ament_cmake_environment_hooks/local_setup.sh

@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/smarthome_common_interfaces/rosidl_generator_cpp/smarthome_common_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp

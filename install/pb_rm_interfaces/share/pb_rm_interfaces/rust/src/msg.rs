@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/pb_rm_interfaces/rosidl_generator_rs/pb_rm_interfaces/rust/src/msg.rs

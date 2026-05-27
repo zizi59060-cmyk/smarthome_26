@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/smarthome_common_interfaces/rosidl_generator_py/smarthome_common_interfaces/_smarthome_common_interfaces_s.ep.rosidl_typesupport_introspection_c.c

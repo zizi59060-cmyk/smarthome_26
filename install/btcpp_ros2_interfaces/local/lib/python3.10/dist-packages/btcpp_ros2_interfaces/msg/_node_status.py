@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/btcpp_ros2_interfaces/rosidl_generator_py/btcpp_ros2_interfaces/msg/_node_status.py

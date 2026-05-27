@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/pb_rm_interfaces/rosidl_typesupport_introspection_cpp/pb_rm_interfaces/msg/detail/game_status__rosidl_typesupport_introspection_cpp.hpp

@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/smarthome_vision/rosidl_generator_cpp/smarthome_vision/msg/detail/detected_target__type_support.hpp

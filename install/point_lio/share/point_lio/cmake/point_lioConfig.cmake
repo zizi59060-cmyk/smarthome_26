@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/point_lio/ament_cmake_core/point_lioConfig.cmake

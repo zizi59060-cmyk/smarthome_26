@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/rmoss_interfaces/rosidl_generator_py/rmoss_interfaces/msg/_robot_status_s.c

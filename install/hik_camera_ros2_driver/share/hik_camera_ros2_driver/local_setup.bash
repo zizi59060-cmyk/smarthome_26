@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/hik_camera_ros2_driver/ament_cmake_environment_hooks/local_setup.bash

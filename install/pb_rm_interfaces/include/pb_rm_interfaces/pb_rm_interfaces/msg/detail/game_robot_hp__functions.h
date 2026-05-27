@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/pb_rm_interfaces/rosidl_generator_c/pb_rm_interfaces/msg/detail/game_robot_hp__functions.h

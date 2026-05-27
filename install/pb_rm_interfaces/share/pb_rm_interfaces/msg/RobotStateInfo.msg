@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws/src/interfaces/pb_rm_interfaces/msg/RobotStateInfo.msg

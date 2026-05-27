@@ -1,0 +1,11 @@
+builtin_interfaces/Time stamp
+uint8 mode
+bool estop
+float32 battery_voltage
+float32 battery_current
+float32 chassis_temp
+uint16 error_code
+uint32 uptime_ms
+uint32 rx_count
+uint32 tx_count
+string text

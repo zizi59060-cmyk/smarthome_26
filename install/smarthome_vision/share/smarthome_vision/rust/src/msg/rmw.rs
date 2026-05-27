@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/smarthome_vision/rosidl_generator_rs/smarthome_vision/rust/src/msg/rmw.rs

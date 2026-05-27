@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/rmoss_interfaces/rosidl_cmake/srv/SetColor_Response.msg

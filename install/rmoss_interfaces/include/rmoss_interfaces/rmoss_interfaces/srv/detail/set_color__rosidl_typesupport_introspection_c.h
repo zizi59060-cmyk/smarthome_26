@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/build/rmoss_interfaces/rosidl_typesupport_introspection_c/rmoss_interfaces/srv/detail/set_color__rosidl_typesupport_introspection_c.h

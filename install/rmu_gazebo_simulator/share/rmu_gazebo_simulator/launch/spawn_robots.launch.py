@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws/src/rmu_gazebo_simulator/rmu_gazebo_simulator/launch/spawn_robots.launch.py

@@ -1,0 +1,1 @@
+/home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws/src/dependencies/rmoss_core/rmoss_cam/include/rmoss_cam/image_task_demo_node.hpp
