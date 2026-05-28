@@ -42,6 +42,9 @@ class RobotSerialCommNode(Node):
         self.declare_parameter("read_hz", 200.0)
         self.declare_parameter("send_hz", 30.0)
         self.declare_parameter("mode_pub_hz", 10.0)
+        self.declare_parameter("reconnect_interval_sec", 1.0)
+        self.declare_parameter("reconnect_log_interval_sec", 5.0)
+        self.declare_parameter("initial_connect_required", False)
         self.declare_parameter("target_timeout_sec", 0.5)
         self.declare_parameter("target_topic", "/smarthome/object_target")
         self.declare_parameter("cmd_vel_topic", "/cmd_vel")
@@ -49,6 +52,7 @@ class RobotSerialCommNode(Node):
         self.declare_parameter("mode_topic", "/vision_mode")
         self.declare_parameter("raw_tx_topic", "/robot_serial_comm/raw_tx_hex")
         self.declare_parameter("raw_rx_topic", "/robot_serial_comm/raw_rx_hex")
+        self.declare_parameter("serial_state_topic", "/robot_serial_comm/serial_state")
         self.declare_parameter("default_zone_id", 0)
         self.declare_parameter("default_mode", int(VisionMode.IDLE))
 
@@ -56,6 +60,14 @@ class RobotSerialCommNode(Node):
         self.latest_twist = Twist()
         self.zone_id = _clamp_u8(self.get_parameter("default_zone_id").value, 0, 6)
         self.current_mode = _clamp_u8(self.get_parameter("default_mode").value, 0, 2)
+        self.reconnect_log_interval_sec = max(
+            0.0, float(self.get_parameter("reconnect_log_interval_sec").value)
+        )
+        self.initial_connect_required = _as_bool(
+            self.get_parameter("initial_connect_required").value
+        )
+        self.last_reconnect_log_sec = 0.0
+        self.last_serial_state = ""
 
         self.parser = GimbalToVisionParser()
         self.transport = SerialTransport(
@@ -63,7 +75,13 @@ class RobotSerialCommNode(Node):
             baudrate=int(self.get_parameter("baudrate").value),
             fake=_as_bool(self.get_parameter("fake_mode").value),
         )
-        self.transport.open()
+
+        self.raw_tx_pub = self.create_publisher(String, str(self.get_parameter("raw_tx_topic").value), 10)
+        self.raw_rx_pub = self.create_publisher(String, str(self.get_parameter("raw_rx_topic").value), 10)
+        self.serial_state_pub = self.create_publisher(
+            String, str(self.get_parameter("serial_state_topic").value), 10
+        )
+        self.mode_pub = self.create_publisher(UInt8, str(self.get_parameter("mode_topic").value), 10)
 
         mode = "FAKE" if self.transport.fake else f"{self.transport.device}@{self.transport.baudrate}"
         self.get_logger().info(f"robot serial comm started: {mode}")
@@ -71,10 +89,11 @@ class RobotSerialCommNode(Node):
             f"VisionToGimbal size={VISION_TO_GIMBAL_SIZE} bytes, "
             f"GimbalToVision size={GIMBAL_TO_VISION_SIZE} bytes"
         )
-
-        self.raw_tx_pub = self.create_publisher(String, str(self.get_parameter("raw_tx_topic").value), 10)
-        self.raw_rx_pub = self.create_publisher(String, str(self.get_parameter("raw_rx_topic").value), 10)
-        self.mode_pub = self.create_publisher(UInt8, str(self.get_parameter("mode_topic").value), 10)
+        connected = self.try_open_serial(force_log=True)
+        if not connected and self.initial_connect_required:
+            raise RuntimeError(
+                f"failed to open serial port {self.transport.device}@{self.transport.baudrate}"
+            )
 
         self.target_sub = self.create_subscription(
             ObjectTarget,
@@ -98,9 +117,11 @@ class RobotSerialCommNode(Node):
         read_period = 1.0 / max(1.0, float(self.get_parameter("read_hz").value))
         send_period = 1.0 / max(1.0, float(self.get_parameter("send_hz").value))
         mode_period = 1.0 / max(1.0, float(self.get_parameter("mode_pub_hz").value))
+        reconnect_period = max(0.1, float(self.get_parameter("reconnect_interval_sec").value))
         self.read_timer = self.create_timer(read_period, self.read_serial_once)
         self.send_timer = self.create_timer(send_period, self.send_packet_once)
         self.mode_timer = self.create_timer(mode_period, self.publish_mode_once)
+        self.reconnect_timer = self.create_timer(reconnect_period, self.reconnect_serial_once)
 
     def destroy_node(self) -> bool:
         self.transport.close()
@@ -108,6 +129,60 @@ class RobotSerialCommNode(Node):
 
     def now_sec(self) -> float:
         return self.get_clock().now().nanoseconds * 1e-9
+
+    def publish_serial_state(self, state: str, force: bool = False) -> None:
+        if not force and state == self.last_serial_state:
+            return
+        self.last_serial_state = state
+        msg = String()
+        msg.data = state
+        self.serial_state_pub.publish(msg)
+
+    def try_open_serial(self, force_log: bool = False) -> bool:
+        if self.transport.fake:
+            self.publish_serial_state("fake", force=force_log)
+            return True
+        if self.transport.is_open:
+            self.publish_serial_state("connected", force=force_log)
+            return True
+
+        try:
+            self.transport.open()
+        except Exception as exc:
+            self.publish_serial_state("disconnected", force=force_log)
+            now = self.now_sec()
+            should_log = force_log or (
+                self.reconnect_log_interval_sec <= 0.0
+                or now - self.last_reconnect_log_sec >= self.reconnect_log_interval_sec
+            )
+            if should_log:
+                self.last_reconnect_log_sec = now
+                self.get_logger().warn(
+                    f"serial disconnected, reconnecting every "
+                    f"{float(self.get_parameter('reconnect_interval_sec').value):.2f}s: {exc}"
+                )
+            return False
+
+        self.parser = GimbalToVisionParser()
+        self.publish_serial_state("connected", force=True)
+        self.get_logger().info(
+            f"serial connected: {self.transport.device}@{self.transport.baudrate}"
+        )
+        return True
+
+    def reconnect_serial_once(self) -> None:
+        if self.transport.is_open:
+            state = "fake" if self.transport.fake else "connected"
+            self.publish_serial_state(state, force=True)
+            return
+        self.try_open_serial()
+
+    def handle_serial_error(self, operation: str, exc: Exception) -> None:
+        if self.transport.fake:
+            return
+        self.transport.mark_disconnected()
+        self.publish_serial_state("disconnected", force=True)
+        self.get_logger().warn(f"serial {operation} failed, will reconnect: {exc}")
 
     def on_target(self, msg: ObjectTarget) -> None:
         pos = msg.pose.pose.position
@@ -152,12 +227,14 @@ class RobotSerialCommNode(Node):
         )
 
     def send_packet_once(self) -> None:
+        if not self.transport.is_open:
+            return
         packet = self.build_packet()
         raw = packet.pack()
         try:
             self.transport.write(raw)
         except Exception as exc:
-            self.get_logger().error(f"serial write failed: {exc}")
+            self.handle_serial_error("write", exc)
             return
 
         msg = String()
@@ -165,10 +242,12 @@ class RobotSerialCommNode(Node):
         self.raw_tx_pub.publish(msg)
 
     def read_serial_once(self) -> None:
+        if not self.transport.is_open:
+            return
         try:
             data = self.transport.read_available()
         except Exception as exc:
-            self.get_logger().error(f"serial read failed: {exc}")
+            self.handle_serial_error("read", exc)
             return
         if not data:
             return
@@ -213,11 +292,13 @@ def _clamp_u8(value, min_value: int = 0, max_value: int = 255) -> int:
 
 def main(args=None) -> None:
     rclpy.init(args=args)
-    node = RobotSerialCommNode()
+    node = None
     try:
+        node = RobotSerialCommNode()
         rclpy.spin(node)
     finally:
-        node.destroy_node()
+        if node is not None:
+            node.destroy_node()
         rclpy.shutdown()
 
 

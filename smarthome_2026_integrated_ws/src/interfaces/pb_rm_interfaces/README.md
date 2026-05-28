@@ -1,19 +1,34 @@
 # pb_rm_interfaces
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Build](https://github.com/SMBU-PolarBear-Robotics-Team/pb_rm_interfaces/actions/workflows/ci.yml/badge.svg)](https://github.com/SMBU-PolarBear-Robotics-Team/pb_rm_interfaces/actions/workflows/ci.yml)
+`pb_rm_interfaces` 是原 StandardRobot++ / RoboMaster 工程使用的通用接口包，包含云台、发射、裁判系统等消息。当前智能家居主链路不再使用这些接口做上下位机通信。
 
-![PolarBear Logo](https://raw.githubusercontent.com/SMBU-PolarBear-Robotics-Team/.github/main/.docs/image/polarbear_logo_text.png)
+## 当前项目中的定位
 
-ROS2 interfaces (.msg, .srv, .action) used in the StandardRobot++ project.
+```text
+当前上下位机通信:
+robot_serial_comm/msg/ObjectTarget + VisionToGimbal/GimbalToVision
 
-## msg
+旧 RoboMaster 通用接口:
+pb_rm_interfaces/msg/*
+```
 
-云台和射击使用自定义消息类型，
+保留本包是为了导航、旧 BehaviorTree 或原哨兵代码的兼容编译。新的抓取通信协议不要在本包里扩展。
 
-* GimbalCmd.msg：云台控制命令，使用绝对位置，单位为弧度
-* ShootCmd.msg：射击命令，包含射击子弹数
-* 底盘控制命令使用 ROS2 的 `geometry_msgs/msg/Twist`。
-* referee
+## 编译
 
-    当前对应串口协议版本：[V1.7.0 (20241225)](https://terra-1-g.djicdn.com/b2a076471c6c4b72b574a977334d3e05/RoboMaster%20%E8%A3%81%E5%88%A4%E7%B3%BB%E7%BB%9F%E4%B8%B2%E5%8F%A3%E5%8D%8F%E8%AE%AE%E9%99%84%E5%BD%95%20V1.7.0%EF%BC%8820241225%EF%BC%89.pdf)
+```bash
+cd ~/ros_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install --packages-up-to pb_rm_interfaces
+source install/setup.bash
+```
+
+## 修改方式
+
+| 需求 | 目录 |
+| --- | --- |
+| 改 RoboMaster 通用消息 | `msg/` |
+| 改服务接口 | `srv/` |
+| 改 action 接口 | `action/` |
+
+如果是智能家居视觉目标、点位、底盘速度或下位机视觉模式，请改 `robot_serial_comm`，不要改这里。

@@ -12,32 +12,62 @@ class SerialTransport:
     def open(self) -> None:
         if self.fake:
             return
+        if self.is_open:
+            return
         if not self.device:
             raise RuntimeError("serial_device is empty while fake_mode is false")
         import serial
 
+        self.close()
         self._serial = serial.Serial(self.device, self.baudrate, timeout=self.timeout)
 
     def close(self) -> None:
-        if self._serial is not None:
-            self._serial.close()
-            self._serial = None
+        serial_obj = self._serial
+        self._serial = None
+        if serial_obj is not None:
+            try:
+                serial_obj.close()
+            except Exception:
+                pass
+
+    def reopen(self) -> None:
+        self.close()
+        self.open()
+
+    def mark_disconnected(self) -> None:
+        self.close()
 
     def read_available(self) -> bytes:
-        if self.fake or self._serial is None:
+        if self.fake:
             return b""
-        waiting = int(getattr(self._serial, "in_waiting", 0))
-        if waiting <= 0:
-            return b""
-        return bytes(self._serial.read(waiting))
+        serial_obj = self._serial
+        if serial_obj is None or not self.is_open:
+            raise RuntimeError("serial port is not open")
+        try:
+            waiting = int(getattr(serial_obj, "in_waiting", 0))
+            if waiting <= 0:
+                return b""
+            return bytes(serial_obj.read(waiting))
+        except Exception:
+            self.mark_disconnected()
+            raise
 
     def write(self, data: bytes) -> int:
         if self.fake:
             return len(data)
-        if self._serial is None:
+        serial_obj = self._serial
+        if serial_obj is None or not self.is_open:
             raise RuntimeError("serial port is not open")
-        return int(self._serial.write(data))
+        try:
+            return int(serial_obj.write(data))
+        except Exception:
+            self.mark_disconnected()
+            raise
 
     @property
     def is_open(self) -> bool:
-        return self.fake or self._serial is not None
+        if self.fake:
+            return True
+        if self._serial is None:
+            return False
+        return bool(getattr(self._serial, "is_open", True))

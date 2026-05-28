@@ -25,6 +25,10 @@ def generate_launch_description():
         DeclareLaunchArgument("cmd_vel_topic", default_value="/cmd_vel"),
         DeclareLaunchArgument("zone_id_topic", default_value="/smarthome/zone_id"),
         DeclareLaunchArgument("mode_topic", default_value="/vision_mode"),
+        DeclareLaunchArgument("serial_state_topic", default_value="/robot_serial_comm/serial_state"),
+        DeclareLaunchArgument("reconnect_interval_sec", default_value="1.0"),
+        DeclareLaunchArgument("reconnect_log_interval_sec", default_value="5.0"),
+        DeclareLaunchArgument("initial_connect_required", default_value="false"),
 
         Node(
             package="smarthome_vision",
@@ -45,6 +49,10 @@ def generate_launch_description():
                 "cmd_vel_topic": LaunchConfiguration("cmd_vel_topic"),
                 "zone_id_topic": LaunchConfiguration("zone_id_topic"),
                 "mode_topic": LaunchConfiguration("mode_topic"),
+                "serial_state_topic": LaunchConfiguration("serial_state_topic"),
+                "reconnect_interval_sec": LaunchConfiguration("reconnect_interval_sec"),
+                "reconnect_log_interval_sec": LaunchConfiguration("reconnect_log_interval_sec"),
+                "initial_connect_required": LaunchConfiguration("initial_connect_required"),
             }.items(),
         ),
     ])
