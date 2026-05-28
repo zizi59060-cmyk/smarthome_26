@@ -250,9 +250,9 @@ ros2 topic pub --once /smarthome/zone_id std_msgs/msg/UInt8 "{data: 4}"
 
 | 想改什么 | 文件 |
 | --- | --- |
-| 串口结构体、CRC、解析逻辑 | `src/robot_serial_comm/robot_serial_comm/protocol.py` |
-| 串口打开、关闭、读写、断线判定 | `src/robot_serial_comm/robot_serial_comm/serial_transport.py` |
-| ROS topic 到串口包的映射 | `src/robot_serial_comm/robot_serial_comm/serial_comm_node.py` |
+| 串口结构体、CRC、解析逻辑 | `src/robot_serial_comm/robot_serial_comm_py/protocol.py` |
+| 串口打开、关闭、读写、断线判定 | `src/robot_serial_comm/robot_serial_comm_py/serial_transport.py` |
+| ROS topic 到串口包的映射 | `src/robot_serial_comm/robot_serial_comm_py/serial_comm_node.py` |
 | 通信默认参数 | `src/robot_serial_comm/config/robot_serial_comm.yaml` |
 | 视觉模式、模型路径、相机参数 | `src/smarthome_vision/src/smarthome_vision_ros2/config/vision.yaml` |
 | 视觉节点代码 | `src/smarthome_vision/src/smarthome_vision_ros2/src/vision_node.cpp` |

@@ -12,7 +12,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   DEPENDENCIES builtin_interfaces geometry_msgs
 )
 
-ament_python_install_package(${PROJECT_NAME})
+ament_python_install_package(robot_serial_comm_py)
 
 install(
   PROGRAMS scripts/serial_comm_node

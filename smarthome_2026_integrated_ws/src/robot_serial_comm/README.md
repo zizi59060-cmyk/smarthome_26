@@ -151,9 +151,9 @@ ros2 topic echo /robot_serial_comm/raw_rx_hex
 
 | 需求 | 文件 |
 | --- | --- |
-| 改结构体字段、帧头、CRC | `robot_serial_comm/protocol.py` |
-| 改串口打开、关闭、读写、断线判定 | `robot_serial_comm/serial_transport.py` |
-| 改 topic 到协议字段的映射 | `robot_serial_comm/serial_comm_node.py` |
+| 改结构体字段、帧头、CRC | `robot_serial_comm_py/protocol.py` |
+| 改串口打开、关闭、读写、断线判定 | `robot_serial_comm_py/serial_transport.py` |
+| 改 topic 到协议字段的映射 | `robot_serial_comm_py/serial_comm_node.py` |
 | 改默认参数 | `config/robot_serial_comm.yaml` |
 | 改 launch 参数 | `launch/robot_serial_comm.launch.py` |
 
