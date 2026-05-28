@@ -17,7 +17,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(camera_info_manager REQUIRED)
-find_package(smarthome_common_interfaces REQUIRED)
+find_package(robot_serial_comm REQUIRED)
 find_package(OpenCV REQUIRED COMPONENTS
   core
   imgproc
@@ -79,7 +79,7 @@ ament_target_dependencies(${PROJECT_NAME}_core
   cv_bridge
   image_transport
   camera_info_manager
-  smarthome_common_interfaces
+  robot_serial_comm
 )
 
 target_link_libraries(${PROJECT_NAME}_core
@@ -100,7 +100,7 @@ ament_target_dependencies(vision_node
   cv_bridge
   image_transport
   camera_info_manager
-  smarthome_common_interfaces
+  robot_serial_comm
 )
 
 target_link_libraries(vision_node

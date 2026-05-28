@@ -13,7 +13,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
 
-#include "smarthome_common_interfaces/msg/object_target.hpp"
+#include "robot_serial_comm/msg/object_target.hpp"
 #include "smarthome_vision/msg/detected_target.hpp"
 #include "smarthome_vision/detector.hpp"
 #include "smarthome_vision/pose_solver.hpp"
@@ -416,7 +416,7 @@ public:
       get_parameter("use_cuda_preprocess").as_bool());
 
     pub_ = create_publisher<smarthome_vision::msg::DetectedTarget>("detected_target", 10);
-    object_target_pub_ = create_publisher<smarthome_common_interfaces::msg::ObjectTarget>(
+    object_target_pub_ = create_publisher<robot_serial_comm::msg::ObjectTarget>(
       get_parameter("object_target_topic").as_string(), 10);
     mode_sub_ = create_subscription<std_msgs::msg::UInt8>(
       get_parameter("vision_mode_topic").as_string(), 10,
@@ -533,13 +533,13 @@ private:
 
   void publishObjectTarget(const smarthome_vision::msg::DetectedTarget & detected)
   {
-    smarthome_common_interfaces::msg::ObjectTarget target;
+    robot_serial_comm::msg::ObjectTarget target;
     target.stamp = detected.stamp;
     target.class_id = detected.tracking ? detected.class_id : -1;
     target.score = detected.tracking ? detected.score : 0.0f;
     target.source = detected.mode == static_cast<uint8_t>(VisionMode::DETECT_QR)
-      ? smarthome_common_interfaces::msg::ObjectTarget::SOURCE_QR
-      : smarthome_common_interfaces::msg::ObjectTarget::SOURCE_OBJECT;
+      ? robot_serial_comm::msg::ObjectTarget::SOURCE_QR
+      : robot_serial_comm::msg::ObjectTarget::SOURCE_OBJECT;
     target.label = detected.tracking ? std::to_string(detected.class_id) : "";
     target.pose.header.stamp = detected.stamp;
     target.pose.header.frame_id = target_frame_id_;
@@ -658,7 +658,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_;
   rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr mode_sub_;
   rclcpp::Publisher<smarthome_vision::msg::DetectedTarget>::SharedPtr pub_;
-  rclcpp::Publisher<smarthome_common_interfaces::msg::ObjectTarget>::SharedPtr object_target_pub_;
+  rclcpp::Publisher<robot_serial_comm::msg::ObjectTarget>::SharedPtr object_target_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   std::unique_ptr<Detector> object_detector_;

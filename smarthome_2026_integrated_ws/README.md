@@ -12,8 +12,7 @@ smarthome_2026_integrated_ws/
 │   ├── pb2025_sentry_nav/          # 导航相关源码，含 pb2025_nav_bringup
 │   ├── pb2025_sentry_behavior/     # 决策启动入口，默认 smart_picking_manager
 │   ├── smarthome_vision/           # 视觉识别，vision.launch.py 会带起通信
-│   ├── robot_serial_comm/          # 新上下位机串口通信包
-│   └── smarthome_common_interfaces/# 共享 ObjectTarget 等消息
+│   └── robot_serial_comm/          # 新上下位机串口通信包，内含 ObjectTarget.msg
 └── README.md
 ```
 
@@ -151,7 +150,7 @@ ros2 launch pb2025_sentry_behavior pb2025_sentry_behavior_launch.py \
 
 | Topic | Type | 说明 |
 | --- | --- | --- |
-| `/smarthome/object_target` | `smarthome_common_interfaces/msg/ObjectTarget` | 视觉发布目标类别、置信度和相机坐标 |
+| `/smarthome/object_target` | `robot_serial_comm/msg/ObjectTarget` | 视觉发布目标类别、置信度和相机坐标 |
 | `/cmd_vel` | `geometry_msgs/msg/Twist` | 导航或决策输出的底盘速度 |
 | `/smarthome/zone_id` | `std_msgs/msg/UInt8` | 决策发布当前 A-F 点位 |
 | `/smarthome/zone_name` | `std_msgs/msg/String` | 可选，给 `smart_picking_manager` 设置 A-F 点位名 |

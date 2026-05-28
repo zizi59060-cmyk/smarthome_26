@@ -10,7 +10,7 @@ from rclpy.node import Node
 from example_interfaces.srv import Trigger
 from std_msgs.msg import String, UInt8
 
-from smarthome_common_interfaces.msg import ObjectTarget
+from robot_serial_comm.msg import ObjectTarget
 
 
 ZONE_IDS = {

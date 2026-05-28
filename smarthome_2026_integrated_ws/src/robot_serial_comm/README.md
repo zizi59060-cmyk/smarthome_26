@@ -40,7 +40,7 @@ struct __attribute__((packed)) GimbalToVision
 
 | Topic | Type | Direction |
 | --- | --- | --- |
-| `/smarthome/object_target` | `smarthome_common_interfaces/msg/ObjectTarget` | vision -> comm |
+| `/smarthome/object_target` | `robot_serial_comm/msg/ObjectTarget` | vision -> comm |
 | `/cmd_vel` | `geometry_msgs/msg/Twist` | nav/decision -> comm |
 | `/smarthome/zone_id` | `std_msgs/msg/UInt8` | decision -> comm |
 | `/vision_mode` | `std_msgs/msg/UInt8` | comm -> vision |

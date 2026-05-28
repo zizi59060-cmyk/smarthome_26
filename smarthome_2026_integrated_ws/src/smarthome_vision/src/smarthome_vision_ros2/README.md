@@ -7,7 +7,7 @@
 | Topic | Type | 说明 |
 | --- | --- | --- |
 | `/vision_mode` | `std_msgs/msg/UInt8` | 通信节点转发的下位机模式 |
-| `/smarthome/object_target` | `smarthome_common_interfaces/msg/ObjectTarget` | 视觉目标输出 |
+| `/smarthome/object_target` | `robot_serial_comm/msg/ObjectTarget` | 视觉目标输出 |
 | `/detected_target` | `smarthome_vision/msg/DetectedTarget` | 调试用视觉原始输出 |
 
 ## 启动

@@ -9,7 +9,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String, UInt8
 
-from smarthome_common_interfaces.msg import ObjectTarget
+from robot_serial_comm.msg import ObjectTarget
 
 from .protocol import (
     GIMBAL_TO_VISION_SIZE,

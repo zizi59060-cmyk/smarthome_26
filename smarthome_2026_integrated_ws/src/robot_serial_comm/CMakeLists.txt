@@ -1,22 +1,26 @@
 cmake_minimum_required(VERSION 3.8)
-project(smarthome_common_interfaces)
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+project(robot_serial_comm)
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(builtin_interfaces REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/CommFrame.msg"
-  "msg/LowerState.msg"
   "msg/ObjectTarget.msg"
-  "srv/ArmCommand.srv"
-  DEPENDENCIES builtin_interfaces std_msgs geometry_msgs
+  DEPENDENCIES builtin_interfaces geometry_msgs
+)
+
+ament_python_install_package(${PROJECT_NAME})
+
+install(
+  PROGRAMS scripts/serial_comm_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME}
 )
 
 ament_export_dependencies(rosidl_default_runtime)
