@@ -69,6 +69,7 @@ add_library(${PROJECT_NAME}_core SHARED
   src/pose_solver.cpp
   src/trt_detector.cpp
   src/detector.cpp
+  src/traditional_qr_detector.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME}_core

@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <sstream>
+#include <iomanip>
 #include <algorithm>
 #include <chrono>
 
@@ -17,6 +19,7 @@
 #include "smarthome_vision/msg/detected_target.hpp"
 #include "smarthome_vision/detector.hpp"
 #include "smarthome_vision/pose_solver.hpp"
+#include "smarthome_vision/traditional_qr_detector.hpp"
 #include "smarthome_vision/types.hpp"
 #include "smarthome_vision/protocol.hpp"
 
@@ -101,8 +104,12 @@ void drawDetectionDebug(cv::Mat & image, const Detection & det, const std::strin
   }
 
   std::ostringstream oss;
-  oss << prefix
-      << " ID:" << det.class_id
+  oss << prefix;
+  const std::string class_name = TraditionalQrDetector::className(det.class_id);
+  if (prefix == "QR" && !class_name.empty()) {
+    oss << " " << class_name;
+  }
+  oss << " ID:" << det.class_id
       << " Conf:" << std::fixed << std::setprecision(2) << det.score;
 
   const std::string label = oss.str();
@@ -275,17 +282,15 @@ struct BestTarget
 };
 
 BestTarget pickBestTarget(
-  const cv::Mat & image,
-  Detector * detector,
+  const std::vector<Detection> & raw_dets,
   const PoseSolver * pose_solver,
   const std::vector<int> & class_mapping)
 {
   BestTarget best;
-  if (detector == nullptr || pose_solver == nullptr) {
+  if (pose_solver == nullptr) {
     return best;
   }
 
-  const std::vector<Detection> raw_dets = detector->infer(image);
   float best_score = -1.0f;
 
   for (auto det : raw_dets) {
@@ -305,6 +310,22 @@ BestTarget pickBestTarget(
   }
 
   return best;
+}
+
+BestTarget pickBestTarget(
+  const cv::Mat & image,
+  Detector * detector,
+  const PoseSolver * pose_solver,
+  const std::vector<int> & class_mapping)
+{
+  if (detector == nullptr) {
+    return {};
+  }
+
+  return pickBestTarget(
+    detector->infer(image),
+    pose_solver,
+    class_mapping);
 }
 
 }  // namespace
@@ -343,6 +364,7 @@ public:
     declare_parameter<double>("qr_conf_threshold", 0.25);
     declare_parameter<double>("qr_score_threshold", 0.25);
     declare_parameter<std::string>("qr_engine_path", "");
+    declare_parameter<int>("qr_recognition_method", 0);
 
     declare_parameter<std::vector<double>>(
       "camera_matrix",
@@ -367,6 +389,7 @@ public:
     camera_fps_ = get_parameter("camera_fps").as_int();
     current_mode_ = static_cast<uint8_t>(get_parameter("initial_mode").as_int());
     target_frame_id_ = get_parameter("target_frame_id").as_string();
+    qr_recognition_method_ = get_parameter("qr_recognition_method").as_int();
 
     auto k = get_parameter("camera_matrix").as_double_array();
     auto d = get_parameter("dist_coeffs").as_double_array();
@@ -407,13 +430,17 @@ public:
       static_cast<float>(get_parameter("object_score_threshold").as_double()),
       get_parameter("use_cuda_preprocess").as_bool());
 
-    qr_detector_ = std::make_unique<Detector>(
-      get_parameter("qr_engine_path").as_string(),
-      get_parameter("qr_input_width").as_int(),
-      get_parameter("qr_input_height").as_int(),
-      static_cast<float>(get_parameter("qr_conf_threshold").as_double()),
-      static_cast<float>(get_parameter("qr_score_threshold").as_double()),
-      get_parameter("use_cuda_preprocess").as_bool());
+    traditional_qr_detector_ = std::make_unique<TraditionalQrDetector>();
+
+    if (qr_recognition_method_ != 1) {
+      qr_detector_ = std::make_unique<Detector>(
+        get_parameter("qr_engine_path").as_string(),
+        get_parameter("qr_input_width").as_int(),
+        get_parameter("qr_input_height").as_int(),
+        static_cast<float>(get_parameter("qr_conf_threshold").as_double()),
+        static_cast<float>(get_parameter("qr_score_threshold").as_double()),
+        get_parameter("use_cuda_preprocess").as_bool());
+    }
 
     pub_ = create_publisher<smarthome_vision::msg::DetectedTarget>("detected_target", 10);
     object_target_pub_ = create_publisher<robot_serial_comm::msg::ObjectTarget>(
@@ -467,6 +494,9 @@ public:
     }
     if (show_debug_) {
       cv::destroyWindow("smarthome_vision_debug");
+    }
+    if (traditional_qr_detector_) {
+      traditional_qr_detector_->closeTuningWindows();
     }
   }
 
@@ -558,6 +588,9 @@ private:
     BestTarget best;
 
     if (mode == static_cast<uint8_t>(VisionMode::IDLE)) {
+      if (traditional_qr_detector_) {
+        traditional_qr_detector_->closeTuningWindows();
+      }
       publishEmptyResult(stamp, mode);
 
       if (show_debug_) {
@@ -570,18 +603,34 @@ private:
     }
 
     if (mode == static_cast<uint8_t>(VisionMode::DETECT_OBJECT)) {
+      if (traditional_qr_detector_) {
+        traditional_qr_detector_->closeTuningWindows();
+      }
       best = pickBestTarget(
         image,
         object_detector_.get(),
         object_pose_solver_.get(),
         object_model_class_ids_);
     } else if (mode == static_cast<uint8_t>(VisionMode::DETECT_QR)) {
-      best = pickBestTarget(
-        image,
-        qr_detector_.get(),
-        qr_pose_solver_.get(),
-        qr_model_class_ids_);
+      if (qr_recognition_method_ == 1 && traditional_qr_detector_) {
+        best = pickBestTarget(
+          traditional_qr_detector_->infer(image, true),
+          qr_pose_solver_.get(),
+          qr_model_class_ids_);
+      } else {
+        if (traditional_qr_detector_) {
+          traditional_qr_detector_->closeTuningWindows();
+        }
+        best = pickBestTarget(
+          image,
+          qr_detector_.get(),
+          qr_pose_solver_.get(),
+          qr_model_class_ids_);
+      }
     } else {
+      if (traditional_qr_detector_) {
+        traditional_qr_detector_->closeTuningWindows();
+      }
       publishEmptyResult(stamp, static_cast<uint8_t>(VisionMode::IDLE));
       return;
     }
@@ -617,6 +666,11 @@ private:
 
       cv::resizeWindow("smarthome_vision_debug", vis_big.cols, vis_big.rows);
       cv::imshow("smarthome_vision_debug", vis_big);
+      cv::waitKey(1);
+    } else if (mode == static_cast<uint8_t>(VisionMode::DETECT_QR) &&
+               qr_recognition_method_ == 1 &&
+               traditional_qr_detector_)
+    {
       cv::waitKey(1);
     }
   }
@@ -663,6 +717,7 @@ private:
 
   std::unique_ptr<Detector> object_detector_;
   std::unique_ptr<Detector> qr_detector_;
+  std::unique_ptr<TraditionalQrDetector> traditional_qr_detector_;
   std::unique_ptr<PoseSolver> object_pose_solver_;
   std::unique_ptr<PoseSolver> qr_pose_solver_;
 
@@ -676,6 +731,7 @@ private:
   int camera_width_ = 640;
   int camera_height_ = 480;
   int camera_fps_ = 30;
+  int qr_recognition_method_ = 0;
 
   std::vector<int> class_names_;
   std::vector<int> object_model_class_ids_;
