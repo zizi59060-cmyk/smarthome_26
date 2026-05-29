@@ -93,6 +93,7 @@ enum class VisionMode : uint8_t
 | `/smarthome/zone_id` | `std_msgs/msg/UInt8` | decision -> comm | 当前点位，0=None，1-6=A-F |
 | `/smarthome/zone_name` | `std_msgs/msg/String` | operator -> decision | 用 A-F 字符串设置点位 |
 | `/vision_mode` | `std_msgs/msg/UInt8` | comm -> vision/decision | 下位机要求的视觉模式 |
+| `/robot_serial_comm/manual_mode` | `std_msgs/msg/UInt8` | operator -> comm | 禁用下位机模式时，上位机手动设置视觉模式 |
 | `/robot_serial_comm/serial_state` | `std_msgs/msg/String` | comm -> debug | `connected`、`disconnected` 或 `fake` |
 | `/robot_serial_comm/raw_tx_hex` | `std_msgs/msg/String` | comm -> debug | 上位机发出的原始包 |
 | `/robot_serial_comm/raw_rx_hex` | `std_msgs/msg/String` | comm -> debug | 下位机发来的原始字节 |
@@ -197,6 +198,9 @@ ros2 launch smarthome_bringup online_competition.launch.py \
 | `reconnect_log_interval_sec` | `5.0` | 重连失败日志节流周期，避免刷屏 |
 | `initial_connect_required` | `false` | `false` 时没有串口也能启动并等待重连；`true` 时初始打开失败直接退出 |
 | `serial_state_topic` | `/robot_serial_comm/serial_state` | 发布 `connected`、`disconnected`、`fake` |
+| `default_mode` | `0` | 通信节点启动时的上位机默认视觉模式 |
+| `accept_lower_mode` | `true` | 是否接受下位机发来的 `GimbalToVision.mode` |
+| `manual_mode_topic` | `/robot_serial_comm/manual_mode` | 上位机手动设置视觉模式的 topic |
 
 示例：
 
@@ -205,6 +209,22 @@ ros2 launch robot_serial_comm robot_serial_comm.launch.py \
   serial_device:=/dev/ttyACM0 \
   reconnect_interval_sec:=0.5 \
   initial_connect_required:=false
+```
+
+禁用下位机模式、由上位机先控制视觉模式：
+
+```bash
+ros2 launch robot_serial_comm robot_serial_comm.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  fake_mode:=false \
+  accept_lower_mode:=false \
+  default_mode:=1
+```
+
+运行中切到二维码模式：
+
+```bash
+ros2 topic pub --once /robot_serial_comm/manual_mode std_msgs/msg/UInt8 "{data: 2}"
 ```
 
 ## 常用调试

@@ -68,6 +68,9 @@ ros2 launch smarthome_bringup online_competition.launch.py \
 | `zone_name_topic` | `/smarthome/zone_name` | 点位名称 |
 | `mode_topic` | `/vision_mode` | 下位机视觉模式 |
 | `serial_state_topic` | `/robot_serial_comm/serial_state` | 串口状态 |
+| `manual_mode_topic` | `/robot_serial_comm/manual_mode` | 上位机手动视觉模式 |
+| `default_mode` | `0` | 通信节点启动时默认视觉模式 |
+| `accept_lower_mode` | `true` | 是否接受下位机发来的视觉模式 |
 
 ## 编译
 

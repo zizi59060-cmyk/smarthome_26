@@ -17,5 +17,7 @@ robot_serial_comm_node:
     raw_tx_topic: "/robot_serial_comm/raw_tx_hex"
     raw_rx_topic: "/robot_serial_comm/raw_rx_hex"
     serial_state_topic: "/robot_serial_comm/serial_state"
+    manual_mode_topic: "/robot_serial_comm/manual_mode"
     default_zone_id: 0
     default_mode: 0
+    accept_lower_mode: true

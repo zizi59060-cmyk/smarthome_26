@@ -53,6 +53,16 @@ ros2 launch smarthome_vision vision.launch.py \
   reconnect_interval_sec:=1.0
 ```
 
+上位机强制视觉模式、不接受下位机 mode：
+
+```bash
+ros2 launch smarthome_vision vision.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  fake_mode:=false \
+  accept_lower_mode:=false \
+  default_mode:=1
+```
+
 ## 视觉模式
 
 | mode | 名称 | 行为 |

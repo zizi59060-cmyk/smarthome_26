@@ -53,8 +53,10 @@ class RobotSerialCommNode(Node):
         self.declare_parameter("raw_tx_topic", "/robot_serial_comm/raw_tx_hex")
         self.declare_parameter("raw_rx_topic", "/robot_serial_comm/raw_rx_hex")
         self.declare_parameter("serial_state_topic", "/robot_serial_comm/serial_state")
+        self.declare_parameter("manual_mode_topic", "/robot_serial_comm/manual_mode")
         self.declare_parameter("default_zone_id", 0)
         self.declare_parameter("default_mode", int(VisionMode.IDLE))
+        self.declare_parameter("accept_lower_mode", True)
 
         self.latest_target: Optional[TargetSnapshot] = None
         self.latest_twist = Twist()
@@ -68,6 +70,7 @@ class RobotSerialCommNode(Node):
         )
         self.last_reconnect_log_sec = 0.0
         self.last_serial_state = ""
+        self.last_ignored_lower_mode: Optional[int] = None
 
         self.parser = GimbalToVisionParser()
         self.transport = SerialTransport(
@@ -89,6 +92,10 @@ class RobotSerialCommNode(Node):
             f"VisionToGimbal size={VISION_TO_GIMBAL_SIZE} bytes, "
             f"GimbalToVision size={GIMBAL_TO_VISION_SIZE} bytes"
         )
+        if not self.accept_lower_mode():
+            self.get_logger().info(
+                f"lower-computer mode input disabled; upper mode starts at {self.current_mode}"
+            )
         connected = self.try_open_serial(force_log=True)
         if not connected and self.initial_connect_required:
             raise RuntimeError(
@@ -113,6 +120,12 @@ class RobotSerialCommNode(Node):
             self.on_zone_id,
             10,
         )
+        self.manual_mode_sub = self.create_subscription(
+            UInt8,
+            str(self.get_parameter("manual_mode_topic").value),
+            self.on_manual_mode,
+            10,
+        )
 
         read_period = 1.0 / max(1.0, float(self.get_parameter("read_hz").value))
         send_period = 1.0 / max(1.0, float(self.get_parameter("send_hz").value))
@@ -129,6 +142,9 @@ class RobotSerialCommNode(Node):
 
     def now_sec(self) -> float:
         return self.get_clock().now().nanoseconds * 1e-9
+
+    def accept_lower_mode(self) -> bool:
+        return _as_bool(self.get_parameter("accept_lower_mode").value)
 
     def publish_serial_state(self, state: str, force: bool = False) -> None:
         if not force and state == self.last_serial_state:
@@ -204,6 +220,15 @@ class RobotSerialCommNode(Node):
     def on_zone_id(self, msg: UInt8) -> None:
         self.zone_id = _clamp_u8(msg.data, 0, 6)
 
+    def on_manual_mode(self, msg: UInt8) -> None:
+        if msg.data not in (int(VisionMode.IDLE), int(VisionMode.DETECT_OBJECT), int(VisionMode.DETECT_QR)):
+            self.get_logger().warn(f"invalid upper-computer manual vision mode: {msg.data}")
+            return
+        if int(msg.data) != self.current_mode:
+            self.get_logger().info(f"upper vision mode changed: {self.current_mode} -> {msg.data}")
+        self.current_mode = int(msg.data)
+        self.publish_mode_once()
+
     def build_packet(self) -> VisionToGimbal:
         target = self.latest_target
         target_fresh = False
@@ -262,6 +287,14 @@ class RobotSerialCommNode(Node):
                 continue
             if frame.mode not in (int(VisionMode.IDLE), int(VisionMode.DETECT_OBJECT), int(VisionMode.DETECT_QR)):
                 self.get_logger().warn(f"unknown vision mode from lower computer: {frame.mode}")
+                continue
+            if not self.accept_lower_mode():
+                if self.last_ignored_lower_mode != frame.mode:
+                    self.get_logger().info(
+                        f"ignored lower-computer vision mode {frame.mode}; "
+                        f"upper mode remains {self.current_mode}"
+                    )
+                    self.last_ignored_lower_mode = frame.mode
                 continue
             if frame.mode != self.current_mode:
                 self.get_logger().info(f"vision mode changed: {self.current_mode} -> {frame.mode}")

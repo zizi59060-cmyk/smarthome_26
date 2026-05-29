@@ -85,6 +85,7 @@ uint8 SOURCE_MANUAL=2
 | `/cmd_vel` | `geometry_msgs/msg/Twist` | sub | 底盘速度 |
 | `/smarthome/zone_id` | `std_msgs/msg/UInt8` | sub | 当前点位 |
 | `/vision_mode` | `std_msgs/msg/UInt8` | pub | 下位机视觉模式 |
+| `/robot_serial_comm/manual_mode` | `std_msgs/msg/UInt8` | sub | 上位机手动设置视觉模式 |
 | `/robot_serial_comm/serial_state` | `std_msgs/msg/String` | pub | 串口状态 |
 | `/robot_serial_comm/raw_tx_hex` | `std_msgs/msg/String` | pub | 调试用发送包 |
 | `/robot_serial_comm/raw_rx_hex` | `std_msgs/msg/String` | pub | 调试用接收字节 |
@@ -134,6 +135,9 @@ ros2 launch smarthome_vision vision.launch.py
 | `zone_id_topic` | `/smarthome/zone_id` | 点位 topic |
 | `mode_topic` | `/vision_mode` | 视觉模式 topic |
 | `serial_state_topic` | `/robot_serial_comm/serial_state` | 串口状态 topic |
+| `manual_mode_topic` | `/robot_serial_comm/manual_mode` | 上位机手动模式 topic |
+| `default_mode` | `0` | 启动时默认视觉模式 |
+| `accept_lower_mode` | `true` | 是否接受下位机发来的视觉模式 |
 
 ## 断线重连
 
@@ -146,6 +150,29 @@ ros2 topic echo /robot_serial_comm/serial_state
 ros2 topic echo /robot_serial_comm/raw_tx_hex
 ros2 topic echo /robot_serial_comm/raw_rx_hex
 ```
+
+## 上位机强制模式测试
+
+联调早期可以禁用下位机发来的 `GimbalToVision.mode`，由上位机决定 `/vision_mode`：
+
+```bash
+ros2 launch robot_serial_comm robot_serial_comm.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  baudrate:=115200 \
+  fake_mode:=false \
+  accept_lower_mode:=false \
+  default_mode:=1
+```
+
+此时通信节点仍会读取 `/robot_serial_comm/raw_rx_hex` 方便看下位机原始包，但不会让下位机 mode 覆盖当前视觉模式。运行中切换模式：
+
+```bash
+ros2 topic pub --once /robot_serial_comm/manual_mode std_msgs/msg/UInt8 "{data: 0}"
+ros2 topic pub --once /robot_serial_comm/manual_mode std_msgs/msg/UInt8 "{data: 1}"
+ros2 topic pub --once /robot_serial_comm/manual_mode std_msgs/msg/UInt8 "{data: 2}"
+```
+
+`0=IDLE`，`1=DETECT_OBJECT`，`2=DETECT_QR`。
 
 ## 修改入口
 

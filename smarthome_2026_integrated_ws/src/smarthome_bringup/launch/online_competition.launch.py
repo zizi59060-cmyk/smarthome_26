@@ -37,9 +37,12 @@ def generate_launch_description():
         DeclareLaunchArgument("zone_name_topic", default_value="/smarthome/zone_name"),
         DeclareLaunchArgument("mode_topic", default_value="/vision_mode"),
         DeclareLaunchArgument("serial_state_topic", default_value="/robot_serial_comm/serial_state"),
+        DeclareLaunchArgument("manual_mode_topic", default_value="/robot_serial_comm/manual_mode"),
         DeclareLaunchArgument("reconnect_interval_sec", default_value="1.0"),
         DeclareLaunchArgument("reconnect_log_interval_sec", default_value="5.0"),
         DeclareLaunchArgument("initial_connect_required", default_value="false"),
+        DeclareLaunchArgument("default_mode", default_value="0"),
+        DeclareLaunchArgument("accept_lower_mode", default_value="true"),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(nav_launch),
@@ -66,9 +69,12 @@ def generate_launch_description():
                 "zone_id_topic": LaunchConfiguration("zone_id_topic"),
                 "mode_topic": LaunchConfiguration("mode_topic"),
                 "serial_state_topic": LaunchConfiguration("serial_state_topic"),
+                "manual_mode_topic": LaunchConfiguration("manual_mode_topic"),
                 "reconnect_interval_sec": LaunchConfiguration("reconnect_interval_sec"),
                 "reconnect_log_interval_sec": LaunchConfiguration("reconnect_log_interval_sec"),
                 "initial_connect_required": LaunchConfiguration("initial_connect_required"),
+                "default_mode": LaunchConfiguration("default_mode"),
+                "accept_lower_mode": LaunchConfiguration("accept_lower_mode"),
             }.items(),
         ),
 
