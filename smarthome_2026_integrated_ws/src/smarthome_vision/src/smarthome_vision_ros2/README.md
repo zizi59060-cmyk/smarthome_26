@@ -58,6 +58,58 @@ ros2 launch smarthome_vision vision.launch.py launch_comm:=false
 
 实车换机器后最常改的是 `object_engine_path`、`qr_engine_path`、相机内参和摄像头编号。
 
+## 单独调试视觉和通信
+
+联调早期可以不接受下位机发送的 mode，由上位机固定视觉模式。下面示例固定为 `mode=1` 物体识别。
+
+1. 启动视觉节点：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+export DISPLAY=:0
+
+ros2 run smarthome_vision vision_node --ros-args \
+  --params-file src/smarthome_vision/src/smarthome_vision_ros2/config/vision.yaml \
+  -p show_debug:=true \
+  -p use_test_mode:=true \
+  -p test_mode:=1 \
+  -p use_local_camera:=true
+```
+
+2. 启动通信节点：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 launch robot_serial_comm robot_serial_comm.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  baudrate:=115200 \
+  fake_mode:=false \
+  accept_lower_mode:=false \
+  default_mode:=1
+```
+
+3. 查看上位机发送给下位机的原始数据：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 topic echo /robot_serial_comm/raw_tx_hex
+```
+
+如果只想看视觉目标输出：
+
+```bash
+ros2 topic echo /detected_target
+ros2 topic echo /smarthome/object_target
+```
+
 ## 编译
 
 ```bash

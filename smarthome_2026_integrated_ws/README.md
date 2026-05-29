@@ -279,6 +279,53 @@ ros2 topic pub --once /smarthome/zone_id std_msgs/msg/UInt8 "{data: 4}"
 | 点位决策逻辑 | `src/pb2025_sentry_behavior/scripts/smart_picking_manager.py` |
 | 总启动参数 | `src/smarthome_bringup/launch/online_competition.launch.py` |
 
+## 上位机指定 Mode 调试视觉和通信
+
+这个流程用于联调早期：不接受下位机发送的 `GimbalToVision.mode`，由上位机固定视觉模式，并同时观察上位机发给下位机的原始数据包。下面示例固定为 `DETECT_OBJECT`，即 `mode=1`。
+
+1. 启动视觉节点。此时视觉节点使用测试模式，不依赖 `/vision_mode`：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+export DISPLAY=:0
+
+ros2 run smarthome_vision vision_node --ros-args \
+  --params-file src/smarthome_vision/src/smarthome_vision_ros2/config/vision.yaml \
+  -p show_debug:=true \
+  -p use_test_mode:=true \
+  -p test_mode:=1 \
+  -p use_local_camera:=true
+```
+
+2. 启动通信节点。`accept_lower_mode:=false` 表示忽略下位机发来的 mode，`default_mode:=1` 表示上位机当前默认模式为物体识别：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 launch robot_serial_comm robot_serial_comm.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  baudrate:=115200 \
+  fake_mode:=false \
+  accept_lower_mode:=false \
+  default_mode:=1
+```
+
+3. 查看上位机发送给下位机的原始数据：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 topic echo /robot_serial_comm/raw_tx_hex
+```
+
+正常发送包以 `53 50` 开头，对应帧头 `S P`。如果视觉节点发布了有效 `/smarthome/object_target`，包内 `command` 会变为 `1`，并带上 `class_id` 与目标相机坐标。
+
 ## 实车注意事项
 
 1. 下位机结构体必须 1 字节对齐，`float` 使用 IEEE754 little-endian。

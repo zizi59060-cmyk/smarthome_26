@@ -174,6 +174,57 @@ ros2 topic pub --once /robot_serial_comm/manual_mode std_msgs/msg/UInt8 "{data: 
 
 `0=IDLE`，`1=DETECT_OBJECT`，`2=DETECT_QR`。
 
+## 配合视觉测试发送包
+
+如果要先由上位机固定模式、单独调试视觉识别和通信打包，可以按下面顺序运行。此流程不接受下位机发来的 mode，示例固定为 `mode=1` 物体识别。
+
+1. 先启动视觉节点：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+export DISPLAY=:0
+
+ros2 run smarthome_vision vision_node --ros-args \
+  --params-file src/smarthome_vision/src/smarthome_vision_ros2/config/vision.yaml \
+  -p show_debug:=true \
+  -p use_test_mode:=true \
+  -p test_mode:=1 \
+  -p use_local_camera:=true
+```
+
+2. 再启动真实串口通信：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 launch robot_serial_comm robot_serial_comm.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  baudrate:=115200 \
+  fake_mode:=false \
+  accept_lower_mode:=false \
+  default_mode:=1
+```
+
+3. 查看发送给下位机的原始包：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 topic echo /robot_serial_comm/raw_tx_hex
+```
+
+调试时也建议同时看视觉目标：
+
+```bash
+ros2 topic echo /smarthome/object_target
+```
+
 ## 修改入口
 
 | 需求 | 文件 |

@@ -80,6 +80,53 @@ test_mode: 1
 
 这样视觉节点可以不依赖下位机发来的 `/vision_mode`，直接按指定模式跑。
 
+## 上位机指定 Mode 单独调试
+
+如果下位机暂时还没有稳定发送 `GimbalToVision.mode`，可以先禁用下位机 mode，由上位机固定视觉模式，并查看通信节点发给下位机的数据。
+
+1. 启动视觉节点。下面命令会打开 OpenCV 调试窗口，并固定为 `test_mode=1` 物体识别：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+export DISPLAY=:0
+
+ros2 run smarthome_vision vision_node --ros-args \
+  --params-file src/smarthome_vision/src/smarthome_vision_ros2/config/vision.yaml \
+  -p show_debug:=true \
+  -p use_test_mode:=true \
+  -p test_mode:=1 \
+  -p use_local_camera:=true
+```
+
+2. 启动通信节点。`accept_lower_mode:=false` 会忽略下位机发来的 mode，`default_mode:=1` 会让通信节点持续发布上位机指定的视觉模式：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 launch robot_serial_comm robot_serial_comm.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  baudrate:=115200 \
+  fake_mode:=false \
+  accept_lower_mode:=false \
+  default_mode:=1
+```
+
+3. 查看发送给下位机的原始数据：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 topic echo /robot_serial_comm/raw_tx_hex
+```
+
+如果 `/smarthome/object_target` 没有消息，通信包会保持无目标状态；视觉识别到目标并发布 `ObjectTarget` 后，`raw_tx_hex` 中的 `command/class_id/x/y/z` 会随之变化。
+
 ## 编译
 
 ```bash
