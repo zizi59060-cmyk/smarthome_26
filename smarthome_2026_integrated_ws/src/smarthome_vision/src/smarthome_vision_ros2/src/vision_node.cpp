@@ -370,6 +370,8 @@ public:
       "camera_matrix",
       {800.0, 0.0, 320.0, 0.0, 800.0, 240.0, 0.0, 0.0, 1.0});
     declare_parameter<std::vector<double>>("dist_coeffs", {0.0, 0.0, 0.0, 0.0, 0.0});
+    declare_parameter<double>("x_offset", 0.0);
+    declare_parameter<double>("y_offset", 0.0);
 
     declare_parameter<std::vector<long int>>("class_names", std::vector<long int>{0, 1, 2, 3});
     declare_parameter<std::vector<double>>(
@@ -390,6 +392,8 @@ public:
     current_mode_ = static_cast<uint8_t>(get_parameter("initial_mode").as_int());
     target_frame_id_ = get_parameter("target_frame_id").as_string();
     qr_recognition_method_ = get_parameter("qr_recognition_method").as_int();
+    x_offset_ = get_parameter("x_offset").as_double();
+    y_offset_ = get_parameter("y_offset").as_double();
 
     auto k = get_parameter("camera_matrix").as_double_array();
     auto d = get_parameter("dist_coeffs").as_double_array();
@@ -515,6 +519,14 @@ private:
     return this->now();
   }
 
+  PoseResult applyPoseOffset(const PoseResult & pose) const
+  {
+    PoseResult adjusted = pose;
+    adjusted.tvec[0] += x_offset_;
+    adjusted.tvec[1] += y_offset_;
+    return adjusted;
+  }
+
   void publishEmptyResult(const builtin_interfaces::msg::Time & stamp, uint8_t mode)
   {
     smarthome_vision::msg::DetectedTarget out;
@@ -636,7 +648,8 @@ private:
     }
 
     if (best.found) {
-      publishFoundResult(stamp, mode, best.det, best.pose);
+      const PoseResult adjusted_pose = applyPoseOffset(best.pose);
+      publishFoundResult(stamp, mode, best.det, adjusted_pose);
     } else {
       publishEmptyResult(stamp, mode);
     }
@@ -645,11 +658,12 @@ private:
       cv::Mat vis = image.clone();
 
       if (best.found) {
+        const PoseResult adjusted_pose = applyPoseOffset(best.pose);
         drawDetectionDebug(
           vis,
           best.det,
           mode == static_cast<uint8_t>(VisionMode::DETECT_OBJECT) ? "OBJ" : "QR");
-        drawPoseInsideBox(vis, best.det, best.pose);
+        drawPoseInsideBox(vis, best.det, adjusted_pose);
       }
 
       drawModeBanner(vis, mode, best.found, use_test_mode, use_local_camera_);
@@ -732,6 +746,8 @@ private:
   int camera_height_ = 480;
   int camera_fps_ = 30;
   int qr_recognition_method_ = 0;
+  double x_offset_ = 0.0;
+  double y_offset_ = 0.0;
 
   std::vector<int> class_names_;
   std::vector<int> object_model_class_ids_;
