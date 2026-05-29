@@ -127,6 +127,55 @@ ros2 topic echo /robot_serial_comm/raw_tx_hex
 
 如果 `/smarthome/object_target` 没有消息，通信包会保持无目标状态；视觉识别到目标并发布 `ObjectTarget` 后，`raw_tx_hex` 中的 `command/class_id/x/y/z` 会随之变化。
 
+## 下位机 Mode 视觉调试
+
+如果要测试下位机发送 `GimbalToVision.mode` 控制视觉模式，按下面顺序运行。这个流程中视觉节点关闭测试模式，会跟随通信节点发布的 `/vision_mode`。
+
+1. 启动通信节点，接受下位机 mode：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 launch robot_serial_comm robot_serial_comm.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  baudrate:=115200 \
+  fake_mode:=false \
+  accept_lower_mode:=true \
+  default_mode:=0
+```
+
+2. 启动视觉节点，关闭测试模式：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+export DISPLAY=:0
+
+ros2 run smarthome_vision vision_node --ros-args \
+  --params-file src/smarthome_vision/src/smarthome_vision_ros2/config/vision.yaml \
+  -p show_debug:=true \
+  -p use_test_mode:=false \
+  -p use_local_camera:=true
+```
+
+3. 观察模式和视觉输出：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 topic echo /vision_mode
+ros2 topic echo /detected_target
+ros2 topic echo /smarthome/object_target
+ros2 topic echo /robot_serial_comm/raw_tx_hex
+```
+
+下位机发送 `mode=1` 时，视觉进入物体识别；发送 `mode=2` 时，视觉进入二维码识别。
+
 ## 编译
 
 ```bash

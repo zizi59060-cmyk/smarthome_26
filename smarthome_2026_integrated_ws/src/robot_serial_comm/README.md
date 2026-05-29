@@ -225,6 +225,54 @@ ros2 topic echo /robot_serial_comm/raw_tx_hex
 ros2 topic echo /smarthome/object_target
 ```
 
+## 接受下位机 Mode 测试
+
+正式验证下位机控制视觉模式时，通信节点需要接受 `GimbalToVision.mode`，视觉节点需要关闭 `use_test_mode`。
+
+1. 启动真实串口通信：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 launch robot_serial_comm robot_serial_comm.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  baudrate:=115200 \
+  fake_mode:=false \
+  accept_lower_mode:=true \
+  default_mode:=0
+```
+
+2. 启动视觉节点，让它跟随 `/vision_mode`：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+export DISPLAY=:0
+
+ros2 run smarthome_vision vision_node --ros-args \
+  --params-file src/smarthome_vision/src/smarthome_vision_ros2/config/vision.yaml \
+  -p show_debug:=true \
+  -p use_test_mode:=false \
+  -p use_local_camera:=true
+```
+
+3. 查看下位机 mode 和通信原始数据：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 topic echo /robot_serial_comm/raw_rx_hex
+ros2 topic echo /vision_mode
+ros2 topic echo /robot_serial_comm/raw_tx_hex
+```
+
+如果 `/robot_serial_comm/raw_rx_hex` 有 `56 53 ...`，但 `/vision_mode` 不变化，优先检查下位机 CRC16 和结构体 1 字节对齐。
+
 ## 修改入口
 
 | 需求 | 文件 |

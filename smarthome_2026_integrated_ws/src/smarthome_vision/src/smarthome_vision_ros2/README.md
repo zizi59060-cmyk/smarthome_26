@@ -110,6 +110,54 @@ ros2 topic echo /detected_target
 ros2 topic echo /smarthome/object_target
 ```
 
+## 使用下位机 Mode 调试
+
+如果要验证下位机发来的 `GimbalToVision.mode`，不要开启视觉测试模式。
+
+1. 启动通信节点：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 launch robot_serial_comm robot_serial_comm.launch.py \
+  serial_device:=/dev/ttyACM0 \
+  baudrate:=115200 \
+  fake_mode:=false \
+  accept_lower_mode:=true \
+  default_mode:=0
+```
+
+2. 启动视觉节点：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+export DISPLAY=:0
+
+ros2 run smarthome_vision vision_node --ros-args \
+  --params-file src/smarthome_vision/src/smarthome_vision_ros2/config/vision.yaml \
+  -p show_debug:=true \
+  -p use_test_mode:=false \
+  -p use_local_camera:=true
+```
+
+3. 观察调试 topic：
+
+```bash
+cd /home/nvidia4/smarthome_2026_integrated_ws/smarthome_2026_integrated_ws
+source /opt/ros/humble/setup.zsh
+source install/setup.zsh
+
+ros2 topic echo /robot_serial_comm/raw_rx_hex
+ros2 topic echo /vision_mode
+ros2 topic echo /detected_target
+ros2 topic echo /smarthome/object_target
+ros2 topic echo /robot_serial_comm/raw_tx_hex
+```
+
 ## 编译
 
 ```bash
