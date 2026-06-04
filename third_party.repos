@@ -1,0 +1,9 @@
+repositories:
+  lf_sentry:
+    type: git
+    url: https://github.com/logwhy/lf_sentry.git
+    version: main
+  smarthome_vision:
+    type: git
+    url: https://github.com/zizi59060-cmyk/smarthome_vision.git
+    version: main

@@ -1,0 +1,15 @@
+smarthome_vision_node:
+  ros__parameters:
+    image_topic: "/image_raw"
+    vision_mode_topic: "/vision_mode"
+    object_target_topic: "/smarthome/object_target"
+    target_frame_id: "camera_link"
+    initial_mode: 0
+    show_debug: true
+    openvino_device: "CPU"
+    use_test_mode: false
+    use_local_camera: true
+    camera_device_id: 0
+    camera_width: 640
+    camera_height: 480
+    camera_fps: 30

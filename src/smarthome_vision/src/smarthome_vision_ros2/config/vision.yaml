@@ -1,0 +1,53 @@
+smarthome_vision_node:
+  ros__parameters:
+    image_topic: "/image_raw"
+    vision_mode_topic: "/vision_mode"
+    object_target_topic: "/smarthome/object_target"
+    target_frame_id: "camera_link"
+    initial_mode: 0
+
+    show_debug: true
+    openvino_device: "CPU"
+
+    use_test_mode: false
+    test_mode: 1
+
+    use_local_camera: true
+    camera_device_id: 0
+    camera_width: 640
+    camera_height: 480
+    camera_fps: 30
+
+    camera_matrix: [
+      816.011939, 0.000000, 305.516996,
+      0.000000, 812.516912, 226.442214,
+      0.000000, 0.000000, 1.000000
+    ]
+    dist_coeffs: [-0.399955, 0.075996, 0.005002, 0.002332, 0.000000]
+    x_offset: 0.000
+    y_offset: 0.000
+
+    class_names: [0, 1, 2, 3]
+    class_sizes: [
+      0.060, 0.060,
+      0.060, 0.060,
+      0.060, 0.060,
+      0.060, 0.060
+    ]
+
+    object_input_width: 640
+    object_input_height: 640
+    object_conf_threshold: 0.25
+    object_score_threshold: 0.25
+    object_model_path: "assets/best-dynamic.xml"
+    object_model_class_ids: [0, 1, 2, 3]
+
+    qr_input_width: 640
+    qr_input_height: 640
+    qr_conf_threshold: 0.25
+    qr_score_threshold: 0.1
+    qr_model_path: ""
+    qr_recognition_method: 1
+    qr_model_class_ids: [0, 1, 2, 3]
+
+    qr_size: 0.060

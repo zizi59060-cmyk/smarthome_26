@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+from robot_serial_comm_py.serial_comm_node import main
+
+
+if __name__ == "__main__":
+    main()

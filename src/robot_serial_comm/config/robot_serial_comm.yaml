@@ -1,0 +1,23 @@
+robot_serial_comm_node:
+  ros__parameters:
+    serial_device: "/dev/ttyACM0"
+    baudrate: 115200
+    fake_mode: false
+    read_hz: 200.0
+    send_hz: 30.0
+    mode_pub_hz: 10.0
+    reconnect_interval_sec: 1.0
+    reconnect_log_interval_sec: 5.0
+    initial_connect_required: false
+    target_timeout_sec: 0.5
+    target_topic: "/smarthome/object_target"
+    cmd_vel_topic: "/cmd_vel"
+    zone_id_topic: "/smarthome/zone_id"
+    mode_topic: "/vision_mode"
+    raw_tx_topic: "/robot_serial_comm/raw_tx_hex"
+    raw_rx_topic: "/robot_serial_comm/raw_rx_hex"
+    serial_state_topic: "/robot_serial_comm/serial_state"
+    manual_mode_topic: "/robot_serial_comm/manual_mode"
+    default_zone_id: 0
+    default_mode: 0
+    accept_lower_mode: true
