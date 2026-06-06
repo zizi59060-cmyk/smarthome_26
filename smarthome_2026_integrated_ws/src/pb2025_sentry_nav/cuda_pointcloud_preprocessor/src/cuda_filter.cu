@@ -14,9 +14,14 @@ struct FilterPredicate
 {
   FilterConfig config;
 
+  __host__ __device__ static bool isFinite(float value)
+  {
+    return !isnan(value) && !isinf(value);
+  }
+
   __host__ __device__ bool operator()(const PointXYZI & point) const
   {
-    if (!isfinite(point.x) || !isfinite(point.y) || !isfinite(point.z)) {
+    if (!isFinite(point.x) || !isFinite(point.y) || !isFinite(point.z)) {
       return false;
     }
 

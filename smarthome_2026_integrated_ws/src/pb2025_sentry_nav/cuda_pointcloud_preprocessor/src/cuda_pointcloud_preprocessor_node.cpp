@@ -1,6 +1,7 @@
 #include "cuda_pointcloud_preprocessor/cuda_filter.hpp"
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <string>
