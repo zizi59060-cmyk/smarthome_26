@@ -45,6 +45,7 @@ def generate_launch_description():
     rviz_config_file = LaunchConfiguration("rviz_config_file")
     use_robot_state_pub = LaunchConfiguration("use_robot_state_pub")
     use_rviz = LaunchConfiguration("use_rviz")
+    use_cuda_pointcloud_preprocessor = LaunchConfiguration("use_cuda_pointcloud_preprocessor")
 
     # Declare the launch arguments
     declare_namespace_cmd = DeclareLaunchArgument(
@@ -133,6 +134,12 @@ def generate_launch_description():
         "use_rviz", default_value="True", description="Whether to start RVIZ"
     )
 
+    declare_use_cuda_pointcloud_preprocessor_cmd = DeclareLaunchArgument(
+        "use_cuda_pointcloud_preprocessor",
+        default_value="False",
+        description="Use CUDA point cloud preprocessor before terrain analysis",
+    )
+
     # Create our own temporary YAML files that include substitutions
 
     configured_params = ParameterFile(
@@ -188,6 +195,7 @@ def generate_launch_description():
             "autostart": autostart,
             "use_composition": use_composition,
             "use_respawn": use_respawn,
+            "use_cuda_pointcloud_preprocessor": use_cuda_pointcloud_preprocessor,
         }.items(),
     )
 
@@ -216,6 +224,7 @@ def generate_launch_description():
     ld.add_action(declare_use_robot_state_pub_cmd)
     ld.add_action(declare_use_rviz_cmd)
     ld.add_action(declare_use_respawn_cmd)
+    ld.add_action(declare_use_cuda_pointcloud_preprocessor_cmd)
 
     # Add the actions to launch all of the navigation nodes
     ld.add_action(start_robot_state_publisher_cmd)

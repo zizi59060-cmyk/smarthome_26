@@ -18,7 +18,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import LoadComposableNodes, Node
 from launch_ros.descriptions import ComposableNode, ParameterFile
@@ -38,6 +38,7 @@ def generate_launch_description():
     container_name_full = (namespace, "/", container_name)
     use_respawn = LaunchConfiguration("use_respawn")
     log_level = LaunchConfiguration("log_level")
+    use_cuda_pointcloud_preprocessor = LaunchConfiguration("use_cuda_pointcloud_preprocessor")
 
     lifecycle_nodes = [
         "controller_server",
@@ -114,6 +115,24 @@ def generate_launch_description():
         "log_level", default_value="info", description="log level"
     )
 
+    declare_use_cuda_pointcloud_preprocessor_cmd = DeclareLaunchArgument(
+        "use_cuda_pointcloud_preprocessor",
+        default_value="False",
+        description="Use CUDA point cloud preprocessor before terrain analysis",
+    )
+
+    start_cuda_pointcloud_preprocessor_cmd = Node(
+        package="cuda_pointcloud_preprocessor",
+        executable="cuda_pointcloud_preprocessor_node",
+        name="cuda_pointcloud_preprocessor",
+        output="screen",
+        respawn=use_respawn,
+        respawn_delay=2.0,
+        condition=IfCondition(use_cuda_pointcloud_preprocessor),
+        arguments=["--ros-args", "--log-level", log_level],
+        parameters=[configured_params],
+    )
+
     start_terrain_analysis_cmd = Node(
         package="terrain_analysis",
         executable="terrainAnalysis",
@@ -121,8 +140,22 @@ def generate_launch_description():
         output="screen",
         respawn=use_respawn,
         respawn_delay=2.0,
+        condition=UnlessCondition(use_cuda_pointcloud_preprocessor),
         arguments=["--ros-args", "--log-level", log_level],
         parameters=[configured_params],
+    )
+
+    start_terrain_analysis_cuda_cmd = Node(
+        package="terrain_analysis",
+        executable="terrainAnalysis",
+        name="terrain_analysis",
+        output="screen",
+        respawn=use_respawn,
+        respawn_delay=2.0,
+        condition=IfCondition(use_cuda_pointcloud_preprocessor),
+        arguments=["--ros-args", "--log-level", log_level],
+        parameters=[configured_params],
+        remappings=[("registered_scan", "registered_scan_filtered")],
     )
 
     start_terrain_analysis_ext_cmd = Node(
@@ -132,8 +165,22 @@ def generate_launch_description():
         output="screen",
         respawn=use_respawn,
         respawn_delay=2.0,
+        condition=UnlessCondition(use_cuda_pointcloud_preprocessor),
         arguments=["--ros-args", "--log-level", log_level],
         parameters=[configured_params],
+    )
+
+    start_terrain_analysis_ext_cuda_cmd = Node(
+        package="terrain_analysis_ext",
+        executable="terrainAnalysisExt",
+        name="terrain_analysis_ext",
+        output="screen",
+        respawn=use_respawn,
+        respawn_delay=2.0,
+        condition=IfCondition(use_cuda_pointcloud_preprocessor),
+        arguments=["--ros-args", "--log-level", log_level],
+        parameters=[configured_params],
+        remappings=[("registered_scan", "registered_scan_filtered")],
     )
 
     load_nodes = GroupAction(
@@ -365,9 +412,13 @@ def generate_launch_description():
     ld.add_action(declare_container_name_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
+    ld.add_action(declare_use_cuda_pointcloud_preprocessor_cmd)
     # Add the actions to launch all of the navigation nodes
+    ld.add_action(start_cuda_pointcloud_preprocessor_cmd)
     ld.add_action(start_terrain_analysis_cmd)
+    ld.add_action(start_terrain_analysis_cuda_cmd)
     ld.add_action(start_terrain_analysis_ext_cmd)
+    ld.add_action(start_terrain_analysis_ext_cuda_cmd)
     ld.add_action(load_nodes)
     ld.add_action(load_composable_nodes)
 

@@ -94,6 +94,24 @@ loam_interface:
     base_frame: "base_footprint"
     lidar_frame: "front_mid360"
 
+cuda_pointcloud_preprocessor:
+  ros__parameters:
+    use_sim_time: False
+    input_topic: "registered_scan"
+    output_topic: "registered_scan_filtered"
+    prefer_cuda: True
+    stride: 1
+    min_x: -10.0
+    max_x: 10.0
+    min_y: -10.0
+    max_y: 10.0
+    min_z: -1.5
+    max_z: 2.0
+    min_range: 0.35
+    max_range: 10.0
+    min_intensity: -1000000.0
+    max_intensity: 1000000.0
+
 sensor_scan_generation:
   ros__parameters:
     use_sim_time: False
@@ -394,19 +412,19 @@ controller_server:
       batch_size: 2000
       
       # 速度限制
-      vx_max: 10.0
-      vy_max: 10.0
+      vx_max: 1.0
+      vy_max: 1.0
       wz_max: 2.0
-      vx_min: -10.0
-      vy_min: -10.0
+      vx_min: -1.0
+      vy_min: -1.0
       wz_min: -2.0
       
       # 加速度限制
-      ax_max: 10.0
-      ay_max: 10.0
+      ax_max: 1.0
+      ay_max: 1.0
       az_max: 3.14
-      ax_min: -10.0
-      ay_min: -10.0
+      ax_min: -1.0
+      ay_min: -1.0
       az_min: -3.14
       
       # 噪声参数
@@ -740,12 +758,12 @@ velocity_smoother:
     smoothing_frequency: 30.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [10.0, 10.0, 2.5] #与 MPPI 限速一致，不再截断高速输出
-    min_velocity: [-10.0, -10.0, -2.5]
+    max_velocity: [1.0, 1.0, 2.5] #与 MPPI 限速一致
+    min_velocity: [-1.0, -1.0, -2.5]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-    max_accel: [10.0, 10.0, 3.0] #与 MPPI 加速度一致
-    max_decel: [-10.0, -10.0, -3.0] #与 MPPI 制动一致
+    max_accel: [1.0, 1.0, 3.0] #与 MPPI 加速度一致
+    max_decel: [-1.0, -1.0, -3.0] #与 MPPI 制动一致
     odom_topic: "Odometry"
     odom_duration: 0.1
 
