@@ -246,9 +246,9 @@ class RobotSerialCommNode(Node):
             x=target.x if has_target and target is not None else 0.0,
             y=target.y if has_target and target is not None else 0.0,
             z=target.z if has_target and target is not None else 0.0,
-            vx=float(twist.linear.x),
-            vy=float(twist.linear.y),
-            wz=float(twist.angular.z),
+            vx=-float(twist.linear.x),
+            vy=-float(twist.linear.y),
+            wz=0,
         )
 
     def send_packet_once(self) -> None:

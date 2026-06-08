@@ -24,8 +24,8 @@ point_lio:
     runtime_pos_log_enable: False                       # Option: True
 
     common:
-      lid_topic: "/livox/lidar_192_168_1_123"
-      imu_topic: "/livox/imu_192_168_1_123"
+      lid_topic: "/livox/lidar_192_168_1_162"
+      imu_topic: "/livox/imu_192_168_1_162"
       con_frame: False                                  # True: if you need to combine several LiDAR frames into one
       con_frame_num: 1                                  # the number of frames combined
       cut_frame: False                                  # True: if you need to cut one LiDAR frame into several subframes
@@ -42,7 +42,7 @@ point_lio:
       lidar_type: 1                                     # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR
       scan_line: 4
       timestamp_unit: 3                                 # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
-      blind: 0.5
+      blind: 0.6
 
     mapping:
       imu_en: True
@@ -107,7 +107,7 @@ terrain_analysis:
     decayTime: 0.5                      # 点云时间差阈值 大于则不会被处理
     noDecayDis: 0.0                     # 点云距离阈值 小于该阈值不考虑时间差
     clearingDis: 0.0                    # 该距离外的点会被清除
-    useSorting: False                    # 这个参数开起来就能上坡了；如果 use_sorting,那么就以周围点中的分位点作为地面点，否则以最低点作为地面点；周围其余点相对于地面点的高度作为通过代价，所以对于坡面，有的点的代价是正，有的是负，就相互抵消了；不要与 consider_drop 同时开启，计算上会有冲突
+    useSorting: True                   # 这个参数开起来就能上坡了；如果 use_sorting,那么就以周围点中的分位点作为地面点，否则以最低点作为地面点；周围其余点相对于地面点的高度作为通过代价，所以对于坡面，有的点的代价是正，有的是负，就相互抵消了；不要与 consider_drop 同时开启，计算上会有冲突
     quantileZ: 0.2                      # useful if use_sorting is enabled.
     considerDrop: False                 # 考虑凹下去的地面,开启则将相对于地面点的高度取绝对值
     limitGroundLift: False
@@ -393,20 +393,21 @@ controller_server:
       model_dt: 0.1
       batch_size: 2000
       
+        
       # 速度限制
-      vx_max: 10.0
-      vy_max: 10.0
-      wz_max: 2.0
-      vx_min: -10.0
-      vy_min: -10.0
-      wz_min: -2.0
+      vx_max: 1.5
+      vy_max: 1.5
+      wz_max: 1.5
+      vx_min: -1.5
+      vy_min: -1.5
+      wz_min: -1.5
       
       # 加速度限制
-      ax_max: 10.0
-      ay_max: 10.0
+      ax_max: 2.0
+      ay_max: 2.0
       az_max: 3.14
-      ax_min: -10.0
-      ay_min: -10.0
+      ax_min: -2.0
+      ay_min: -2.0
       az_min: -3.14
       
       # 噪声参数
@@ -740,12 +741,12 @@ velocity_smoother:
     smoothing_frequency: 30.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [10.0, 10.0, 2.5] #与 MPPI 限速一致，不再截断高速输出
-    min_velocity: [-10.0, -10.0, -2.5]
+    max_velocity: [1.5, 1.5, 2.5] #与 MPPI 限速一致
+    min_velocity: [-1.5, -1.5, -2.5]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-    max_accel: [10.0, 10.0, 3.0] #与 MPPI 加速度一致
-    max_decel: [-10.0, -10.0, -3.0] #与 MPPI 制动一致
+    max_accel: [2.0, 2.0, 3.0] #与 MPPI 加速度一致
+    max_decel: [-2.0, -2.0, -3.0] #与 MPPI 制动一致
     odom_topic: "Odometry"
     odom_duration: 0.1
 
